@@ -3,9 +3,14 @@
 # https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_tutorials.html
 import cv2
 import numpy as np
+
+import glob
+import os
+
 from pprint import pprint as pp
 
-image_name = 'image.jpg'
+path_in = 'in/*'
+path_out = 'out'
 window_name = 'crop'
 size_max_image = 500
 debug_mode = True
@@ -112,10 +117,26 @@ def show_image(image, window_name):
     cv2.destroyAllWindows()
 
 
-image = cv2.imread(image_name)
-image = scale_image(image, size_max_image)
-image = rotate_image(image)
-if (debug_mode): show_image(image, window_name)
-image = detect_box(image, True)
+for file_iterator in glob.iglob(path_in):
+    image = cv2.imread(file_iterator)
+    image = scale_image(image, size_max_image)
+    image = rotate_image(image)
+    if (debug_mode): show_image(image, window_name)
+    image = detect_box(image, True)
 
-#cv2.imwrite(image_name + '.cropped.jpg', image)
+    # Create out path
+    if not os.path.exists(path_out):
+        os.mkdir(path_out)
+
+    # Build output file path
+    file_name_ext = os.path.basename(file_iterator)
+    file_name, file_extension = os.path.splitext(file_name_ext)
+    file_path = os.path.join(path_out, file_name + '.cropped' + file_extension)
+
+    # Write out file
+    cv2.imwrite(file_path, image)
+
+    print("Transform file {} to {}".format(
+        file_iterator,
+        file_path
+    ))

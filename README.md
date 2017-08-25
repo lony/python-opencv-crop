@@ -15,6 +15,8 @@ Using OpenCV 3.3 and Python 3 to automatically crop sheets inside images for lat
 
 ## Inspired from
 
+* http://www.pyimagesearch.com/2014/09/01/build-kick-ass-mobile-document-scanner-just-5-minutes/
+* http://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
 * https://stackoverflow.com/questions/36982736/how-to-crop-biggest-rectangle-out-of-an-image/36988763
 * https://stackoverflow.com/questions/37803903/opencv-and-python-for-auto-cropping
 * https://stackoverflow.com/questions/13538748/crop-black-edges-with-opencv

@@ -126,7 +126,7 @@ for file_iterator in glob.iglob(path_in):
 
     # Create out path
     if not os.path.exists(path_out):
-        os.mkdir(path_out)
+        os.makedirs(path_out)
 
     # Build output file path
     file_name_ext = os.path.basename(file_iterator)

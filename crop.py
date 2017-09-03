@@ -116,9 +116,26 @@ def show_image(image, window_name):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def cut_of_top(image, pixel):
+    image_width, image_height = get_image_width_height(image)
+
+    # startY, endY, startX, endX coordinates
+    new_y = 0+pixel
+    image = image[new_y:image_height, 0:image_width]
+    return image
+
+def cut_of_bottom(image, pixel):
+    image_width, image_height = get_image_width_height(image)
+
+    # startY, endY, startX, endX coordinates
+    new_height = image_height-pixel
+    image = image[0:new_height, 0:image_width]
+    return image
+
 
 for file_iterator in glob.iglob(path_in):
     image = cv2.imread(file_iterator)
+    #image = cut_of_top(image, 1000)    
     image = scale_image(image, size_max_image)
     image = rotate_image(image)
     if (debug_mode): show_image(image, window_name)

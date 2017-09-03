@@ -9,6 +9,10 @@ import os
 
 from pprint import pprint as pp
 
+from pyimagesearch.transform import four_point_transform
+from pyimagesearch import imutils
+from skimage.filters import threshold_adaptive
+
 path_in = 'in/*'
 path_out = 'out'
 window_name = 'crop'
@@ -50,71 +54,59 @@ def scale_image(image, size):
     )
     return image_resized_scaled
 
-def detect_box(image, cropIt=True):
-    # https://stackoverflow.com/questions/36982736/how-to-crop-biggest-rectangle-out-of-an-image/36988763
-    # Transform colorspace to YUV
-    image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-    image_y = np.zeros(image_yuv.shape[0:2], np.uint8)
-    image_y[:, :] = image_yuv[:, :, 0]
+def detect_box(image):
+    # convert the image to grayscale, .... 
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if (debug_mode):  show_image(gray, window_name)
 
-    # Blur to filter high frequency noises
-    image_blurred = cv2.GaussianBlur(image_y, (3, 3), 0)
-    if (debug_mode):  show_image(image_blurred, window_name)
+    # blur it, and ...
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    if (debug_mode): show_image(gray, window_name)
 
-    # Apply canny edge-detector
-    edges = cv2.Canny(image_blurred, 100, 300, apertureSize=3)
+    # find edges in the image
+    edges = cv2.Canny(gray, 75, 200)
     if (debug_mode): show_image(edges, window_name)
 
-    # Find extrem outer contours
-    _, contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # ind the contours in the edged image, keeping only the
+    # largest ones, and initialize the screen contour
+    (_, contours, _) = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key = cv2.contourArea, reverse = True)[:5]
     if (debug_mode):
-         cv2.drawContours(image, contours, -1, (0, 255, 0), 3)
+         cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
          show_image(image, window_name)
 
-    # https://stackoverflow.com/questions/37803903/opencv-and-python-for-auto-cropping
-    # Remove large countours
-    new_contours = []
+    # loop over the contours
+    screenCnt = []
     for c in contours:
-        if cv2.contourArea(c) < 4000000:
-            new_contours.append(c)
-
-    # Get overall bounding box
-    best_box = [-1, -1, -1, -1]
-    for c in new_contours:
-        x, y, w, h = cv2.boundingRect(c)
-        if best_box[0] < 0:
-            best_box = [x, y, x + w, y + h]
-        else:
-            if x < best_box[0]:
-                best_box[0] = x
-            if y < best_box[1]:
-                best_box[1] = y
-            if x + w > best_box[2]:
-                best_box[2] = x + w
-            if y + h > best_box[3]:
-                best_box[3] = y + h
+        # approximate the contour
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+    
+        # if our approximated contour has four points, then we
+        # can assume that we have found our screen
+        if len(approx) == 4:
+            screenCnt = approx
+            break
 
     if (debug_mode):
-        cv2.rectangle(image, (best_box[0], best_box[1]), (best_box[2], best_box[3]), (0, 255, 0), 1)
-        show_image(image, window_name)
+         pp(screenCnt)
+         cv2.drawContours(image, [screenCnt], -1, (255, 0, 0), 2)
+         show_image(image, window_name)
 
-    if (cropIt):
-        image = image[best_box[1]:best_box[3], best_box[0]:best_box[2]]
-        if (debug_mode): show_image(image, window_name)
-
-    return image
+    return image, screenCnt
 
 
-def show_image(image, window_name):
+def show_image(image, window_name, waitForKey=True):
     # Show image
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.imshow(window_name, image)
     image_width, image_height = get_image_width_height(image)
     cv2.resizeWindow(window_name, image_width, image_height)
 
-    # Wait before closing
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if waitForKey:
+        # Wait before closing
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 def cut_of_top(image, pixel):
     image_width, image_height = get_image_width_height(image)
@@ -135,11 +127,33 @@ def cut_of_bottom(image, pixel):
 
 for file_iterator in glob.iglob(path_in):
     image = cv2.imread(file_iterator)
-    #image = cut_of_top(image, 1000)    
-    image = scale_image(image, size_max_image)
     image = rotate_image(image)
+    image = cut_of_bottom(image, 1000)
+
+    ratio = image.shape[0] / 500.0
+    orig = image.copy()
+    image = imutils.resize(image, height = 500)
+
     if (debug_mode): show_image(image, window_name)
-    image = detect_box(image, True)
+    image, screenCnt = detect_box(image)
+
+
+    # apply the four point transform to obtain a top-down
+    # view of the original image
+    warped = four_point_transform(orig, screenCnt.reshape(4, 2) * ratio)
+
+    if (debug_mode):
+        show_image(imutils.resize(warped, height = 650), "Warped")
+
+    # convert the warped image to grayscale, then threshold it
+    # to give it that 'black and white' paper effect
+    #gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+    #gray = threshold_adaptive(gray, 251, offset = 10)
+    #gray = gray.astype("uint8") * 255
+
+    #if (debug_mode):
+    #    show_image(imutils.resize(orig, height = 650), window_name, False)
+    #    show_image(imutils.resize(gray, height = 650), "Warped")
 
     # Create out path
     if not os.path.exists(path_out):

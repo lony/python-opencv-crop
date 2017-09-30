@@ -22,6 +22,15 @@ Using OpenCV 3.3 and Python 3 to automatically crop sheets inside images for lat
 * https://stackoverflow.com/questions/13538748/crop-black-edges-with-opencv
 * http://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/
 * http://www.pyimagesearch.com/2014/01/20/basic-image-manipulations-in-python-and-opencv-resizing-scaling-rotating-and-cropping/
+* https://awesomelemon.github.io/2017/01/15/Document-recognition-with-Python-OpenCV-and-Tesseract.html
+* https://stackoverflow.com/questions/6555629/algorithm-to-detect-corners-of-paper-sheet-in-photo
+* https://github.com/vipul-sharma20/document-scanner
+* http://bretahajek.com/2017/01/scanning-documents-photos-opencv/
+
+### Rotation
+
+* https://stuporglue.org/automatically-orient-scanned-photos-correctly-with-opencv/
+* http://www.pyimagesearch.com/2017/02/20/text-skew-correction-opencv-python/
 
 ## Learning
 

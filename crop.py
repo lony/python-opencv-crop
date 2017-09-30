@@ -68,6 +68,7 @@ def detect_box(image, cropIt=True):
     # Find extrem outer contours
     _, contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if (debug_mode):
+         #                                      b  g   r 
          cv2.drawContours(image, contours, -1, (0, 255, 0), 3)
          show_image(image, window_name)
 
@@ -135,10 +136,13 @@ def cut_of_bottom(image, pixel):
 
 for file_iterator in glob.iglob(path_in):
     image = cv2.imread(file_iterator)
-    #image = cut_of_top(image, 1000)    
-    image = scale_image(image, size_max_image)
+
     image = rotate_image(image)
+    image = cut_of_bottom(image, 1000)
+
+    image = scale_image(image, size_max_image)
     if (debug_mode): show_image(image, window_name)
+    
     image = detect_box(image, True)
 
     # Create out path

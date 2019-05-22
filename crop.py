@@ -13,7 +13,7 @@ path_in = 'in/*'
 path_out = 'out'
 window_name = 'crop'
 size_max_image = 500
-debug_mode = True
+debug_mode = False
 
 
 def get_image_width_height(image):
@@ -66,9 +66,9 @@ def detect_box(image, cropIt=True):
     if (debug_mode): show_image(edges, window_name)
 
     # Find extrem outer contours
-    _, contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if (debug_mode):
-         #                                      b  g   r 
+         #                                      b  g   r
          cv2.drawContours(image, contours, -1, (0, 255, 0), 3)
          show_image(image, window_name)
 
@@ -133,16 +133,18 @@ def cut_of_bottom(image, pixel):
     image = image[0:new_height, 0:image_width]
     return image
 
-
+step = 0
 for file_iterator in glob.iglob(path_in):
     image = cv2.imread(file_iterator)
+    print(step)
+    step+=1
 
     image = rotate_image(image)
     image = cut_of_bottom(image, 1000)
 
     image = scale_image(image, size_max_image)
     if (debug_mode): show_image(image, window_name)
-    
+
     image = detect_box(image, True)
 
     # Create out path
